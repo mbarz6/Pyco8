@@ -1,0 +1,8 @@
+[package]
+name = "Pyco8"
+version = "0.1.0"
+authors = ["Michael Barz <mbarz6@gmail.com>"]
+
+[dependencies]
+cpython = "0.1"
+piston-window = "0.70.0"

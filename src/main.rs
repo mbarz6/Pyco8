@@ -1,39 +1,31 @@
-extern crate cpython;
-extern crate piston_window;
-
-use cpython::{Python, PyResult};
+#[macro_use] extern crate cpython;
+use cpython::{Python, PyResult, PyErr, PyDict};
+use cpython::{exc};
 
 use std::fs::File;
 use std::io::prelude::*;
 use std::time::SystemTime;
 
-use piston_window::*;
-
-fn draw_rect(py: Python, r: f64, g: f64, b: f64) {
+fn draw_rect(py: Python, r: f64, g: f64, b: f64) -> PyResult<bool> {
   println!("r: {}, g: {}, b: {}", r, g, b);  
+  
+  Ok(true)
 }
 
 fn main() {
-  let gil = Python::acquire_gil();
-  
-  let mut f = File::open("test.py").expect("file not found");
+  let mut f = File::open("src/test.py").expect("file not found");
   let mut contents = String::new();
   f.read_to_string(&mut contents).expect("wtf");
 
-  let mut window: PistonWindow =
-        WindowSettings::new("Hello Piston!", [640, 480])
-        .exit_on_esc(true).build().unwrap();
-    while let Some(event) = window.next() {
-        window.draw_2d(&event, |context, graphics| {
-            clear([1.0; 4], graphics);
-            rectangle([1.0, 0.0, 0.0, 1.0], // red
-                      [0.0, 0.0, 100.0, 100.0],
-                      context.transform,
-                      graphics);
-        });
-    }
+  let gil = Python::acquire_gil();
+  let py = gil.python();
+  update(py, &contents);
 }
 
 fn update(py: Python, contents: &str) {
-  py.run(&format!("{}\n_update()", contents), None, None);
+  // add drawRect to locals, allowing our python to call it
+  let dict = PyDict::new(py);
+  dict.set_item(py, "draw_rect", py_fn!(py, draw_rect(r: f64, g: f64, b: f64))).unwrap();
+
+  py.run(&format!("{}\n_update()", contents), Some(&dict), None).unwrap();
 }

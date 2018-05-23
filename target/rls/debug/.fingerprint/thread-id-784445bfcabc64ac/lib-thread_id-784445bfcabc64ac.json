@@ -1,0 +1,1 @@
+{"rustc":856697738923649634,"features":"[]","target":10205076212903807384,"profile":2479238963835404001,"path":15633975974422330380,"deps":[["kernel32-sys v0.2.2",17414782917612816620],["libc v0.2.41",10273991655543570800]],"local":[{"Precalculated":"2.0.0"}],"rustflags":["--error-format=json"],"epoch":"Epoch2015"}

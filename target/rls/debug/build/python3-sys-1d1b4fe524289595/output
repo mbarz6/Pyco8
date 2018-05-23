@@ -1,0 +1,9 @@
+cargo:rustc-link-lib=pythonXY:python35
+cargo:rustc-link-search=native=C:\Users\mike\Anaconda3\libs
+cargo:rustc-cfg=Py_3_4
+cargo:rustc-cfg=Py_3_5
+cargo:rustc-cfg=py_sys_config="WITH_THREAD"
+cargo:rustc-cfg=py_sys_config="Py_USING_UNICODE"
+cargo:rustc-cfg=py_sys_config="Py_UNICODE_SIZE_2"
+
+cargo:python_flags=FLAG_WITH_THREAD=1,FLAG_Py_USING_UNICODE=1,VAL_Py_UNICODE_SIZE=2

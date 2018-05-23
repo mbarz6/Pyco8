@@ -1,4 +1,2 @@
-counter = 0
 def _update():
-  print(counter)
-  counter = counter + 1
+  draw_rect(0.3, 0.2, 0.1)

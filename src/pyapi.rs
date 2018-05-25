@@ -62,7 +62,19 @@ pub fn make_request(request: DrawRequest) {
   requests.push_back(request);
 }
 
-pub fn draw_rect(_py: Python, r: f32, g: f32, b: f32, x: f64, y: f64, length: f64, width: f64) -> PyResult<bool> {
+pub fn get_sprite_data(sprite: usize) -> [u8; 64] {
+  let req_holder_wrapper = get_request_holder();
+  let sprite_data = req_holder_wrapper.sprite_data.lock().unwrap();
+  sprite_data[sprite]
+}
+
+pub fn set_sprite_data(sprite: usize, new_data: [u8; 64]) {
+  let req_holder_wrapper = get_request_holder();
+  let mut sprite_data = req_holder_wrapper.sprite_data.lock().unwrap();
+  sprite_data[sprite] = new_data;
+}
+
+pub fn draw_rect_py(_py: Python, r: f32, g: f32, b: f32, x: f64, y: f64, length: f64, width: f64) -> PyResult<bool> {
   let rect_request = DrawRequest::DrawRect {
     r,
     g,
@@ -78,7 +90,7 @@ pub fn draw_rect(_py: Python, r: f32, g: f32, b: f32, x: f64, y: f64, length: f6
   Ok(true)
 }
 
-pub fn draw_sprite(_py: Python, x: i32, y: i32, sprite: usize) -> PyResult<bool> {
+pub fn draw_sprite_py(_py: Python, x: i32, y: i32, sprite: usize) -> PyResult<bool> {
   let req_holder_wrapper = get_request_holder();
   let sprite_data = req_holder_wrapper.sprite_data.lock().unwrap();
   let sprite_data = sprite_data[sprite];
@@ -91,7 +103,7 @@ pub fn draw_sprite(_py: Python, x: i32, y: i32, sprite: usize) -> PyResult<bool>
   Ok(true)
 }
 
-pub fn clear_screen(_py: Python, r: f32, g: f32, b: f32) -> PyResult<bool> {
+pub fn clear_screen_py(_py: Python, r: f32, g: f32, b: f32) -> PyResult<bool> {
   let clear_screen_request = DrawRequest::ClearScreen {
     r, g, b,
   };

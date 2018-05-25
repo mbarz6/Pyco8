@@ -9,12 +9,11 @@ use std::fs::File;
 use std::io::prelude::*;
 
 mod pyapi;
-
 use pyapi::*;
 
 enum State {
   Game,
-  ArtEditor,
+  ArtEditor { sprite: usize },
 }
 
 const SCALE: u32 = 4;
@@ -30,7 +29,7 @@ fn main() {
 
   let opengl = OpenGL::V3_2;
 
-  let mut state = State::ArtEditor;
+  let mut state = State::Game;
   let mut window: PistonWindow =
     WindowSettings::new("Hello Piston!", [BASE * SCALE, BASE * SCALE])
     .exit_on_esc(true).build().unwrap();
@@ -45,9 +44,9 @@ fn main() {
           // BECAUSE PYDICT CAN'T COPY, SO WE NEEDA MOVE IT
           // (and where's it gonna go once it gets a-moved?)
           let dict = PyDict::new(py);
-          dict.set_item(py, "draw_rect", py_fn!(py, draw_rect(r: f32, g: f32, b: f32, x: f64, y: f64, length: f64, width: f64))).unwrap();
-          dict.set_item(py, "clear_screen", py_fn!(py, clear_screen(r: f32, g: f32, b: f32))).unwrap();
-          dict.set_item(py, "draw_sprite", py_fn!(py, draw_sprite(x: i32, y: i32, sprite: usize))).unwrap(); 
+          dict.set_item(py, "draw_rect", py_fn!(py, draw_rect_py(r: f32, g: f32, b: f32, x: f64, y: f64, length: f64, width: f64))).unwrap();
+          dict.set_item(py, "clear_screen", py_fn!(py, clear_screen_py(r: f32, g: f32, b: f32))).unwrap();
+          dict.set_item(py, "draw_sprite", py_fn!(py, draw_sprite_py(x: i32, y: i32, sprite: usize))).unwrap(); 
           render(py, dict, &contents);
 
           let req_holder_wrapper = get_request_holder();
@@ -94,7 +93,7 @@ fn main() {
           }
         }
       },
-      State::ArtEditor => {
+      State::ArtEditor { sprite } => {
 
       }
     }

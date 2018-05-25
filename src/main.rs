@@ -1,7 +1,7 @@
 #[macro_use] extern crate cpython;
 extern crate piston_window;
 
-use cpython::{Python, PyResult, PyDict};
+use cpython::{Python, PyDict, PyTuple};
 
 use piston_window::*;
 
@@ -29,17 +29,17 @@ fn main() {
 
   let opengl = OpenGL::V3_2;
 
-  let mut state = State::Game;
+  let mut state = State::ArtEditor{ sprite: 0 };
   let mut window: PistonWindow =
-    WindowSettings::new("Hello Piston!", [BASE * SCALE, BASE * SCALE])
-    .exit_on_esc(true).build().unwrap();
+    WindowSettings::new("Pyco8", [BASE * SCALE, BASE * SCALE])
+    .exit_on_esc(true).resizable(false).build().unwrap();
 
   while let Some(event) = window.next() {
     
     match state {
       State::Game => {  
         // if it's a render event...
-        if let Some(args) = event.render_args() { 
+        if let Some(_args) = event.render_args() { 
           // "why make a new dict every loop, mr. michael?"
           // BECAUSE PYDICT CAN'T COPY, SO WE NEEDA MOVE IT
           // (and where's it gonna go once it gets a-moved?)
@@ -72,7 +72,7 @@ fn main() {
                   window.draw_2d(&event, |context, graphics| {
                     for i in x..(x+8) {
                       for j in y..(y+8) {
-                        if sprite_data[(i + 8*j) as usize] == 0 {
+                        if sprite_data[((i-x) + 8*(j-y)) as usize] == 0 {
                           rectangle([0.0, 0.0, 0.0, 1.0], 
                             [(i * (SCALE as i32)) as f64, (j * (SCALE as i32)) as f64, SCALE as f64, SCALE as f64],
                             context.transform,
@@ -94,6 +94,30 @@ fn main() {
         }
       },
       State::ArtEditor { sprite } => {
+        // render sprite
+        let sprite_data = get_sprite_data(sprite);
+        let x: i32 = 10;
+        let y: i32 = 0;
+        let editor_scale: i32 = 4;
+        window.draw_2d(&event, |context, graphics| {
+          for i in x..(x+8) {
+            for j in y..(y+8) {
+              if sprite_data[((i-x) + 8*(j-y))  as usize] == 0 {
+                rectangle([0.0, 0.0, 0.0, 1.0], 
+                  [(i * (SCALE as i32) * editor_scale) as f64, (j * (SCALE as i32) * editor_scale) as f64, 
+                    ((SCALE as i32) * editor_scale) as f64, ((SCALE as i32) * editor_scale) as f64],
+                  context.transform,
+                  graphics);
+              } else {
+                rectangle([1.0, 1.0, 1.0, 1.0], 
+                  [(i * (SCALE as i32) * editor_scale) as f64, (j * (SCALE as i32) * editor_scale) as f64, 
+                    ((SCALE as i32) * editor_scale) as f64, ((SCALE as i32) * editor_scale) as f64],
+                  context.transform,
+                  graphics);
+              }
+            }     
+          }
+        });
 
       }
     }

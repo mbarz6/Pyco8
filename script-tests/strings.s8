@@ -1,0 +1,9 @@
+stringy = "string"
+char = 'o'
+stringy[3] = char # stringy is now "strong"
+stringy += " boi" # stringy is now "strong boi"
+stringy = "He is a " + string # stringy is now "He is a strong boi"
+char = stringy[0] # char is now 's'
+
+stringy += to_string(2)
+stringy += to_string(true)

@@ -1,0 +1,7 @@
+cool = 4
+cool = cool + 0.5
+cool = cool / 2.1
+cool = cool * 3
+cool = 0
+cool = cool - 3.2
+cool += 0.5 # similarly, -=, *=, /= are implemented

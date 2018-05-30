@@ -3,7 +3,7 @@ extern crate find_folder;
 
 use self::find_folder::Search;
 
-use gl::types::*;
+use core::gl::types::*;
 
 use std::ffi::CString;
 use std::str;
@@ -28,29 +28,26 @@ impl Shader {
         Shader{ program, shaders, linked: false }
     }
 
-    pub fn from_folder(shader_path: &str) -> Shader {
+    // creates shader by loading all shaders in given folder
+    pub fn from_folder(vertex_path: &str, fragment_path: &str) -> Shader {
         let mut shader = Shader::new();
 
-        let shader_sources = fs::read_dir(shader_path).unwrap();
-        for shader_source in shader_sources {
-            if let Ok(shader_source) = shader_source {
-                let name = shader_source.path();
-                let name = name.to_str().expect("file not found!");
-                let mut file = File::open(name).expect("file not found!");
-                let mut contents = String::new();
-                file.read_to_string(&mut contents).expect("rip");
-                if name.ends_with(".vert") {
-                    shader.add_shader(&contents, gl::VERTEX_SHADER);
-                } else if name.ends_with(".frag") {
-                    shader.add_shader(&contents, gl::FRAGMENT_SHADER);
-                }
-            }
-        }
+        
+        let mut file = File::open(vertex_path).expect("file not found!");
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).expect("rip");
+        shader.add_shader(&contents, gl::VERTEX_SHADER);
+        let mut file = File::open(fragment_path).expect("file not found!");
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).expect("rip");
+        shader.add_shader(&contents, gl::FRAGMENT_SHADER);
+
         shader.link();
 
         shader
     }
 
+    // adds shader to shader program
     pub fn add_shader(&mut self, source: &str, shader_type: GLenum) {
         if self.linked {
             panic!("Attempted to add a shader to an already linked shader!");
@@ -65,17 +62,21 @@ impl Shader {
             );
             gl::CompileShader(shader);
 
+            // see if it compiled correctly
             let mut status = gl::FALSE as GLint;
             gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
             if status != (gl::TRUE as GLint) {
+                // length of log message
                 let mut len = 0;
                 gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut len);
+                // read log message into CString-like vector
                 let mut buf = Vec::with_capacity(len as usize);
                 buf.set_len((len as usize) - 1);
                 gl::GetShaderInfoLog(shader, len, 
                     ptr::null_mut(), 
                     buf.as_mut_ptr() as *mut GLchar
                 );
+                // error time!
                 panic!("{}", 
                     str::from_utf8(&buf).ok()
                         .expect("shader log ain't valid utf8")
@@ -94,6 +95,7 @@ impl Shader {
         unsafe {
             gl::LinkProgram(self.program);
 
+            // cleanup
             for shader in &mut self.shaders {
                 gl::DetachShader(self.program, *shader);
                 gl::DeleteShader(*shader);
@@ -108,6 +110,19 @@ impl Shader {
             gl::UseProgram(self.program);
         }
     }
+}
+
+// this code is just uniform wrappers
+impl Shader {
+    // gets location of uniform, since this will come up in all the following functions
+    fn get_location(&self, name: &str) -> GLint {
+        let name = CString::new(name).unwrap();
+        let location;
+        unsafe {
+            location = gl::GetUniformLocation(self.program, name.as_ptr());
+        }
+        location
+    }
 
     pub fn add4f(&self, name: &str, f1: f32, f2: f32, f3: f32, f4: f32) {
         unsafe {
@@ -121,13 +136,10 @@ impl Shader {
         }
     }
 
-    fn get_location(&self, name: &str) -> GLint {
-        let name = CString::new(name).unwrap();
-        let location;
+    pub fn add1ui(&self, name: &str, ui1: u32) {
         unsafe {
-            location = gl::GetUniformLocation(self.program, name.as_ptr());
+            gl::Uniform1ui(self.get_location(name), ui1);
         }
-        location
     }
 }
 

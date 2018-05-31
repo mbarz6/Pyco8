@@ -20,6 +20,8 @@ pub struct Renderer {
     vbo_vertices: GLuint,
     sprites: Vec<[u8; 64]>,
     ndc_coord: GLfloat,
+    width: u32, 
+    height: u32,
 }
 
 impl Renderer {
@@ -77,10 +79,27 @@ impl Renderer {
         }
 
         // finally we're done
-        Renderer{ scale, size, shader_program, vao, vbo_vertices, sprites, ndc_coord}
+        Renderer{ scale, size, shader_program, vao, vbo_vertices, sprites, ndc_coord, width: size as u32, height: size as u32 }
+    }
+
+    pub fn resize(&mut self, w: u32, h: u32) {
+        let min = if w < h { w } else { h }; 
+        self.size = min as f32;
+        // always keep screen 128x128 fat pixels
+        self.scale = self.size / 128.0;
+        self.width = w;
+        self.height = h;
+
+        unsafe {
+            // change viewport to reflext this
+            // the first two args are for margins in case we're not perfect square
+            // the last two are just width/height
+            gl::Viewport(((w - self.size as u32) / 2) as i32, ((h - self.size as u32) / 2) as i32, self.size as i32, self.size as i32);
+        }
     }
 }
 
+// s8 visible drawing api
 impl Renderer {
     // draws a fat pixel to screen
     pub fn draw_pixel(&self, x: u32, y: u32, color: u32) {
@@ -109,9 +128,5 @@ impl Renderer {
                 self.draw_pixel(i + x, j + y, (sprite_data[(i + 8 * j) as usize] - ('0' as u8)) as u32);
             }
         }
-    }
-
-    pub fn clear_screen(&self, color: u32) {
-        
     }
 }

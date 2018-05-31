@@ -38,7 +38,8 @@ pub fn start() {
                 glutin::Event::WindowEvent{ event, .. } => match event {
                     glutin::WindowEvent::CloseRequested => running = false,
                     glutin::WindowEvent::Resized(w, h) => {
-                         window.resize(w, h);
+                        window.resize(w, h);
+                        renderer.resize(w, h);
                     },
                     _ => ()
                 },
@@ -49,11 +50,16 @@ pub fn start() {
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
 
+            // four corners test
             renderer.draw_pixel(0, 0, 1);
             renderer.draw_pixel(127, 0, 1);
             renderer.draw_pixel(0, 127, 1);
             renderer.draw_pixel(127, 127, 1);
 
+            // sprite off screen
+            renderer.draw_sprite(125, 10, 0);
+
+            // sprite on screen
             renderer.draw_sprite(10, 10, 0);
         }
 

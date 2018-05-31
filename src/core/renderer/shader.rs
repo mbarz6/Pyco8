@@ -1,14 +1,10 @@
 extern crate gl;
-extern crate find_folder;
-
-use self::find_folder::Search;
 
 use core::gl::types::*;
 
 use std::ffi::CString;
 use std::str;
 use std::ptr;
-use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 

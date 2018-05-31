@@ -46,6 +46,7 @@ impl Renderer {
         let mut vbo_vertices: u32 = 0;
         let mut vao: u32 = 0;
 
+        // create/configure the vao
         unsafe {
             gl::GenBuffers(1, &mut vbo_vertices as *mut u32);
             gl::GenVertexArrays(1, &mut vao as *mut u32);

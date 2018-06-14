@@ -1,4 +1,5 @@
 use super::lexer::Token;
+use super::lexer::lex;
 
 use std::collections::HashMap;
 use std::ops::Deref;
@@ -45,7 +46,7 @@ impl Context {
         } else if let Some(ref mut parent) = self.parent {
             parent.set(name, value);
         } else {
-            panic!("Tried to set a variabel which doesn't exist.");
+            panic!("Tried to set a variable which doesn't exist.");
         }
     }
 
@@ -68,4 +69,62 @@ impl Context {
             None
         }
     }
+}
+
+// computes an expression, like 2 * (5 - 3)
+pub fn compute(tokens: Vec<Box<Token>>) -> Vec<Box<Token>> {
+    // first, convert to RPN with variation on shunting-yard
+    let mut output: Vec<Box<Token>> = Vec::new();
+    let mut operators: Vec<Box<Token>> = Vec::new();
+
+    for token in tokens {
+        /*for token in &output {
+            print!("{} ", token);
+        }
+        print!(";");
+        for token in &operators {
+            print!("{} ", token);
+        }
+        println!("");*/
+
+        match *token {
+            Token::Operator(_, pref) => {
+                while operators.len() > 0 {
+                    if let Token::Operator(_, top_pref) = *operators[operators.len() - 1] {
+                        if top_pref >= pref {
+                            output.push(operators.pop().unwrap());
+                        } else {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }  
+                }
+                operators.push(token);
+            },
+            Token::NumericLiteral(_) => {
+                output.push(token);
+            },
+            Token::OpenParen => {
+                operators.push(token);
+            },
+            Token::CloseParen => {
+                loop {
+                    let operator = operators.pop().unwrap();
+                    match *operator {
+                        Token::OpenParen => { break; }
+                        _ => { output.push(operator); } 
+                    }
+                }
+            },
+            _ => (),
+        }
+    }
+
+    while operators.len() > 0 { 
+        output.push(operators.pop().unwrap());
+    }
+
+    // now, the computing part!
+    output
 }

@@ -1,10 +1,11 @@
 use std::str::FromStr;
 use std::fmt;
+use std::collections::HashMap;
 
 pub enum Token {
     Identifier(String),
     Keyword(String),
-    Operator(String),
+    Operator(String, u8), // opname + precedence
     NumericLiteral(f64),
     OpenParen,
     CloseParen,
@@ -16,7 +17,7 @@ impl fmt::Display for Token {
         match *self {
             Token::Identifier(ref string) => write!(f, "{}", string),
             Token::Keyword(ref string) => write!(f, "{}", string),
-            Token::Operator(ref string) => write!(f, "{}", string),
+            Token::Operator(ref string, prec) => write!(f, "({} {})", string, prec),
             Token::NumericLiteral(ref val) => write!(f, "{}", val),
             Token::OpenParen => write!(f, "("),
             Token::CloseParen => write!(f, ")"),
@@ -25,11 +26,12 @@ impl fmt::Display for Token {
     }
 }
 
-const KEYWORDS: [&str; 3] = [ "if", "else", "function" ];
-const OPERATORS: [&str; 3] = [ "=", "+", "-" ];
+const KEYWORDS: [&str; 4] = [ "if", "else", "function", "=" ];
 
 // lexes a line of code
 pub fn lex(line: &str) -> Vec<Box<Token>> {
+    let OPERATORS: HashMap<&str, u8> = [ ("+", 1), ("-", 1), ("*", 2) ].iter().cloned().collect();
+
     let mut tokens: Vec<Box<Token>> = Vec::new();
     
     let mut chars = line.chars();
@@ -48,12 +50,27 @@ pub fn lex(line: &str) -> Vec<Box<Token>> {
     // loop over symbols
     loop {
         match symbols.next() {
-            Some(symbol) => {
+            Some(mut symbol) => {
+                if let Some(c) = symbol.chars().next() {
+                    if c == '(' { 
+                        tokens.push(Box::new(Token::OpenParen));
+                        symbol = &symbol[1..];
+                    } 
+                }
+                let mut should_close_paren = false;
+                if let Some(c) = symbol.chars().last() {
+                    if c == ')' {
+                        symbol = &symbol[0..(symbol.len() - 1)];
+                        should_close_paren = true;
+                    }
+                }
+                
+
                 tokens.push(
                     if KEYWORDS.contains(&symbol) {
                         Box::new(Token::Keyword(String::from(symbol)))   
-                    } else if OPERATORS.contains(&symbol) {
-                        Box::new(Token::Operator(String::from(symbol)))  
+                    } else if OPERATORS.contains_key(&symbol) {
+                        Box::new(Token::Operator(String::from(symbol), OPERATORS[symbol]))  
                     } else if symbol.chars().next().unwrap().is_digit(10) || symbol.chars().next().unwrap() == '.' {
                         Box::new(Token::NumericLiteral(f64::from_str(symbol).unwrap()))
                     } else if symbol.chars().next().unwrap() == '(' {
@@ -64,6 +81,9 @@ pub fn lex(line: &str) -> Vec<Box<Token>> {
                         Box::new(Token::Identifier(String::from(symbol)))
                     }
                 );
+                if should_close_paren {
+                    tokens.push(Box::new(Token::CloseParen));
+                }
             },
             None => break, // quit loop at end
         }

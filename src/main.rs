@@ -5,5 +5,5 @@ use std::fs::File;
 use std::io::prelude::*;
 
 fn main() {
-    core::start();
+    script8::tests();
 }
